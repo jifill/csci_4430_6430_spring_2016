@@ -1,0 +1,48 @@
+commit: A = B + C
+commit: B = C + A
+commit: C = A + B
+commit: A = A + 1
+commit: B = B + 1
+commit: C = C + 1
+commit: D = D + 1
+commit: E = E + 1
+commit: F = F + 1
+commit: G = G + 1
+commit: H = H + 1
+commit: I = I + 1
+commit: J = J + 1
+commit: K = K + 1
+commit: L = L + 1
+commit: M = M + 1
+commit: N = N + 1
+commit: O = O + 1
+commit: P = P + 1
+commit: Q = Q + 1
+commit: R = R + 1
+commit: S = S + 1
+commit: T = T + 1
+commit: U = U + 1
+commit: V = V + 1
+commit: W = W + 1
+commit: X = X + 1
+commit: Y = Y + 1
+commit: Z = Z + 1
+commit: A = A + 1; B = B - 1
+commit: B = B + 1; C = C - 1
+commit: C = C + 1; D = D - 1
+commit: D = D + 1; E = E - 1
+commit: E = E + 1; F = F - 1
+commit: F = F + 1; G = G - 1
+commit: G = G + 1; H = H - 1
+commit: H = H + 1; I = I - 1
+commit: I = I + 1; J = J - 1
+commit: J = J + 1; K = K - 1
+commit: K = K + 1; L = L - 1
+commit: L = L + 1; M = M - 1
+commit: M = M + 1; N = N - 1
+commit: N = N + 1; O = O - 1
+commit: O = O + 1; P = P - 1
+commit: P = P + 1; Q = Q - 1
+commit: Q = Q + 1; R = R - 1
+commit: R = R + 1; S = S - 1
+commit: S = S + 1; T = T - 1

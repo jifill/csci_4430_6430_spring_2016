@@ -8,19 +8,12 @@ import java.io.IOException;
 //import java.io.IOException;
 import java.io.InputStreamReader;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.ExecutorService;
-//import java.util.concurrent.Executors;
 
 // TO DO: Task is currently an ordinary class.
 // You will need to modify it to make it a task,
 // so it can be given to an Executor thread pool.
 //
-
-//class Task
-class Task implements Runnable
-{
+class Task {
     private static final int A = constants.A;
     private static final int Z = constants.Z;
     private static final int numLetters = constants.numLetters;
@@ -37,8 +30,7 @@ class Task implements Runnable
     // writing, or both, (2) verify all previously peeked-at values,
     // (3) perform all updates, and (4) close all opened accounts.
 
-    public Task(Account[] allAccounts, String trans)
-    {
+    public Task(Account[] allAccounts, String trans) {
         accounts = allAccounts;
         transaction = trans;
     }
@@ -47,51 +39,35 @@ class Task implements Runnable
     // You probably want to change it to return a reference to an
     // account *cache* instead.
     //
-    private Account parseAccount(String name)
-    {
+    private Account parseAccount(String name) {
         int accountNum = (int) (name.charAt(0)) - (int) 'A';
         if (accountNum < A || accountNum > Z)
             throw new InvalidTransactionError();
         Account a = accounts[accountNum];
-        for (int i = 1; i < name.length(); i++)
-	    {
+        for (int i = 1; i < name.length(); i++) {
             if (name.charAt(i) != '*')
                 throw new InvalidTransactionError();
             accountNum = (accounts[accountNum].peek() % numLetters);
             a = accounts[accountNum];
         }
-	Account aa = new Account(a.getValue());
-	//aa = a;
-        return aa;
+        return a;
     }
 
-    private int parseAccountOrNum(String name)
-    {
+    private int parseAccountOrNum(String name) {
         int rtn;
-        if (name.charAt(0) >= '0' && name.charAt(0) <= '9')
-	    {
-		rtn = new Integer(name).intValue();
-	    }
-	else
-	    {
-		rtn = parseAccount(name).peek();
-	    }
+        if (name.charAt(0) >= '0' && name.charAt(0) <= '9') {
+            rtn = new Integer(name).intValue();
+        } else {
+            rtn = parseAccount(name).peek();
+        }
         return rtn;
     }
 
-    public void run()
-    {
-	long thread_id = Thread.currentThread().getId();
-
-	System.out.println("[THREAD " + thread_id + " ] status: cmd = '" + transaction + "'\n");
-	
+    public void run() {
         // tokenize transaction
         String[] commands = transaction.split(";");
 
-	System.out.println("[THREAD " + thread_id + " ] status: cmd _str = "+ rrays.toString(commands) + "'\n");
-
-        for (int i = 0; i < commands.length; i++)
-	    {
+        for (int i = 0; i < commands.length; i++) {
             String[] words = commands[i].trim().split("\\s");
             if (words.length < 3)
                 throw new InvalidTransactionError();
@@ -99,8 +75,7 @@ class Task implements Runnable
             if (!words[1].equals("="))
                 throw new InvalidTransactionError();
             int rhs = parseAccountOrNum(words[2]);
-            for (int j = 3; j < words.length; j+=2)
-		{
+            for (int j = 3; j < words.length; j+=2) {
                 if (words[j].equals("+"))
                     rhs += parseAccountOrNum(words[j+1]);
                 else if (words[j].equals("-"))
@@ -122,13 +97,11 @@ class Task implements Runnable
 
 public class MultithreadedServer {
     
-    // requires: accounts != null && accounts[i] != null (i.e., accounts are properly initialized)
-    // modifies: accounts
-    // effects: accounts change according to transactions in inputFile
+	// requires: accounts != null && accounts[i] != null (i.e., accounts are properly initialized)
+	// modifies: accounts
+	// effects: accounts change according to transactions in inputFile
     public static void runServer(String inputFile, Account accounts[])
-        throws IOException
-    {
-	System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+        throws IOException {
 
         // read transactions from input file
         String line;
@@ -139,20 +112,11 @@ public class MultithreadedServer {
         // following loop to feed tasks to the executor instead of running them
         // directly.  
 
-	//ThreadPoolExecutor executor = (ThreadPoolExecutor);
-	//Executors.newCachedThreadPool();
-	ExecutorService executor = Executors.newFixedThreadPool(5);
-        while ((line = input.readLine()) != null)
-	    {
-		//line contains a given transaction
-		//Task t = new Task(accounts, line); //initialize task object
-		 Task t = new Task(accounts, line); //initialize task object
-		 //t.run();
-		 executor.execute(t);
-	    }
-
-	execcutor.shutdown();
-        executor.awaitTermination(180,TimeUnit.SECONDS);
+        while ((line = input.readLine()) != null) {
+            Task t = new Task(accounts, line);
+            t.run();
+        }
+        
         input.close();
 
     }
@@ -172,24 +136,24 @@ public class MultithreadedServer {
 	System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 
     }
-    public static void aaa ()
-    {
+public static void aaa ()
+ {
 	
-	//System.out.println("In my_lel()\n");
+     //System.out.println("In my_lel()\n");
 	try{
-	    BufferedReader br = 
-		new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader br = 
+                      new BufferedReader(new InputStreamReader(System.in));
 			
-	    String input;
+		String input;
 			
-	    while((input=br.readLine())!=null){
-		System.out.println(input);
-	    }
+		while((input=br.readLine())!=null){
+			System.out.println(input);
+		}
 			
 	}catch(IOException io){
-	    io.printStackTrace();
+		io.printStackTrace();
 	}	
-    }
+  }
 
 
 }

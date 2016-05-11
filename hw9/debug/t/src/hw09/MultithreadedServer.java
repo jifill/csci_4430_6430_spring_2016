@@ -12,8 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ExecutorService;
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 //import java.util.concurrent.Executors;
 
 // TO DO: Task is currently an ordinary class.
@@ -40,7 +38,7 @@ class Task implements Runnable
 
     private int[] lhs_arr;
     private int[] temp_arr;
-    private boolean p_dbg; //print debug flag
+
     // TO DO: The sequential version of Task peeks at accounts
     // whenever it needs to get a value, and opens, updates, and closes
     // an account whenever it needs to set a value.  This won't work in
@@ -65,7 +63,6 @@ class Task implements Runnable
 
     public Task(Account[] allAccounts, String trans)
     {
-	p_dbg = false;
         accounts = allAccounts;
         transaction = trans;
 	//private Account[] acc_cache;//
@@ -118,13 +115,6 @@ class Task implements Runnable
 	//aa = a;
         //return aa;
 	arr[0] = accountNum;
-	long thread_id = Thread.currentThread().getId();
-	//int i =0;
-
-	if(accountNum == 0)
-	    if(p_dbg)
-		System.out.println("[THREAD " + thread_id + " ] Returning account A'\n");
-	    
 	return acc_cache[accountNum]; //return reference to account, peek will be called on this to get value
     }
 
@@ -149,47 +139,34 @@ class Task implements Runnable
     {
 	long thread_id = Thread.currentThread().getId();
 	int i =0;
-	if(p_dbg)
-	    System.out.println("[THREAD " + thread_id + " ] status: cmd = '" + transaction + "'\n");
+	System.out.println("[THREAD " + thread_id + " ] status: cmd = '" + transaction + "'\n");
 	
         // tokenize transaction
         String[] commands = transaction.split(";");
-	if(p_dbg)
-	    System.out.println("[THREAD " + thread_id + " ] status: cmd _str = "+ Arrays.toString(commands) + "'\n");
+
+	System.out.println("[THREAD " + thread_id + " ] status: cmd _str = "+ Arrays.toString(commands) + "'\n");
 	
         for ( i = 0; i < commands.length; i++) //process each segment of transaction
 	    {
             String[] words = commands[i].trim().split("\\s");
-	    //System.out.println("[THREAD " + thread_id + " ] status: word_str = "+ Arrays.toString(words) + "'\n");
+	    System.out.println("[THREAD " + thread_id + " ] status: word_str = "+ Arrays.toString(words) + "'\n");
             if (words.length < 3)
                 throw new InvalidTransactionError();
-	    if(p_dbg)
-		System.out.println("[THREAD " + thread_id + " ] status: lhs = "+ words[0] + "'\n");
+	    System.out.println("[THREAD " + thread_id + " ] status: lhs = "+ words[0] + "'\n");
 
 	    lhs_arr[0] = -1;
 	    temp_arr[0] = -1;
             Account lhs = parseAccount(words[0], lhs_arr);   
-	    if(p_dbg)
-		System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ") has initial value of " + accounts[lhs_arr[0]].peek()  + "'\n");
+	    
 	    
 
 	    //check rest of expression
             if (!words[1].equals("=")) //if '=' is not present, throw error
-		{
-		    if(lhs_arr[0] != 0)
-			if(p_dbg)
-			    System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": [Invalid (1)] val =" + accounts[lhs_arr[0]].peek()  + "'\n");
                 throw new InvalidTransactionError();
-		}
             int rhs = parseAccountOrNum(words[2],temp_arr);
 	    //verify_cache_status[temp_arr[0]] = true;
 	    if(temp_arr[0] != -1)
-		{
-		    if(lhs_arr[0] != 0)
-			if(p_dbg)
-			    System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": [1] \n");
 		verify_cache_status[temp_arr[0]] = true;
-		}
 	    //temp_arr holds number of
             for (int j = 3; j < words.length; j+=2)
 		{
@@ -197,34 +174,19 @@ class Task implements Runnable
 			{
 			rhs += parseAccountOrNum(words[j+1],temp_arr);
 			if(temp_arr[0] != -1)
-			    {
 			    verify_cache_status[temp_arr[0]] = true;
-			    }
 			}
 		    else if (words[j].equals("-")) //compute difference
 			{
 			    rhs -= parseAccountOrNum(words[j+1],temp_arr);
 			    if(temp_arr[0] != -1)
-				{
 				verify_cache_status[temp_arr[0]] = true;
-				}
 			}
 		    else
-			{
-			    
-			    if(lhs_arr[0] != 0)
-				if(p_dbg)
-				    System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": [Invalid (1)] val =" + accounts[lhs_arr[0]].peek()  + "'\n");
 			throw new InvalidTransactionError();
-			}
 		}
             try
 		{
-		    
-		    if(lhs_arr[0] != 0)
-			if(p_dbg)
-			    System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": Entered try block\n");
-
 		    //open all necessary indicies //read and write
 
 		    //open files for reading
@@ -241,14 +203,13 @@ class Task implements Runnable
 		    //open_write_status[i] = false
 		    //verify all indicies of verify_cache_status which are true
 		    for(int l = 0;l<accounts.length;l++)
-			if(open_read_status[l])
+			if(verify_cache_status[i])
 			    accounts[l].verify(acc_cache_int[l]); //verify against cache
 
 		    //if all went well
 		    //accounts[lhs_arr[0]] = rhs;//set the lhs equal to the rhs
 
-		    if(p_dbg)
-			System.out.println("[THREAD " + thread_id + " ] status: Trying to upddate = Account "+ ((char)(lhs_arr[0] + 65)) + " to have value " + rhs   + "'\n");
+		    System.out.println("[THREAD " + thread_id + " ] status: Trying to upddate = Account "+ ((char)(lhs_arr[0] + 65)) + " to have value " + rhs   + "'\n");
 		    //lhs.update(rhs);
 		    accounts[lhs_arr[0]].update(rhs);
 		    //lhs.close();
@@ -258,7 +219,6 @@ class Task implements Runnable
 				accounts[j].close(); //removes both readers and writers with one call
 				open_read_status[j] = false;
 				open_write_status[j] = false;
-				verify_cache_status[j] = false;
 			    }
 
 		    //verify that nothing has changed
@@ -271,21 +231,15 @@ class Task implements Runnable
 		      - verify()
 		      - open()
 		     */
-		    //		    if(!lhs_arr[0])
-		    //System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": [Invalid (1)] val =" + accounts[lhs_arr[0]].peek()  + "'\n");
+
 		// free all locks?
 		    		    //close all accounts
-		    if(lhs_arr[0] != 0)
-			if(p_dbg)
-			    System.out.println("[THREAD " + thread_id + " ] status: Lhs (Account "+ ((char)(lhs_arr[0] + 65)) + ": [Invalid (2)] val =" + accounts[lhs_arr[0]].peek()  + "'\n");
-		    i--;
 		    for(int j = 0;j<accounts.length;j++)
 			if(open_read_status[j] || open_write_status[j]) 
 			    {
 				accounts[j].close(); //removes both readers and writers with one call
 				open_read_status[j] = false;
 				open_write_status[j] = false;
-				verify_cache_status[j] = false;
 			    }
 
 
@@ -321,11 +275,8 @@ public class MultithreadedServer {
     public static void runServer(String inputFile, Account accounts[])
         throws IOException
     {
-	//System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+	System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 
-	//List<String> where = new ArrayList<String>();
-	//String [] line_buffer;
-	ArrayList<String> line_buffer = new ArrayList<String>();
         // read transactions from input file
         String line;
         BufferedReader input =
@@ -338,10 +289,8 @@ public class MultithreadedServer {
 	//ThreadPoolExecutor executor = (ThreadPoolExecutor);
 	//Executors.newCachedThreadPool();
 	ExecutorService executor = Executors.newFixedThreadPool(5);
-	boolean p_dbg = false;
         while ((line = input.readLine()) != null)
 	    {
-		line_buffer.add(line);
 		//line contains a given transaction
 		//Task t = new Task(accounts, line); //initialize task object
 		 Task t = new Task(accounts, line); //initialize task object
@@ -350,26 +299,9 @@ public class MultithreadedServer {
 	    }
 
 	executor.shutdown();
-	try
-	    {
-        executor.awaitTermination(180,TimeUnit.SECONDS);
-	    }
-	catch(InterruptedException e)
-	    {
-	
-	    }
+        //executor.awaitTermination(180,TimeUnit.SECONDS);
         input.close();
-	//Convert list back to array
-	String[] temp_buffer = new String[line_buffer.size()];
-	temp_buffer = line_buffer.toArray(temp_buffer);
-	if(p_dbg)
-	    System.out.println("size of line_buffer =  " + line_buffer.size() + "\n");
-	if(p_dbg)
-	    {
-		System.out.println("Contents of line_buffer:\n");
-		for(int k = 0;k<line_buffer.size();k++)
-		    System.out.println(temp_buffer[k] + "\n");
-	    }
+
     }
 
     public static void main(String[] args)

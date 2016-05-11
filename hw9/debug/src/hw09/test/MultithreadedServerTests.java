@@ -34,6 +34,7 @@ public class MultithreadedServerTests extends TestCase {
 	 }    
      
         
+
      @Test
 	 public void testIncrement() throws IOException {
 	
@@ -42,19 +43,38 @@ public class MultithreadedServerTests extends TestCase {
 		for (int i = A; i <= Z; i++) {
 			accounts[i] = new Account(Z-i);
 		}			 
-		
-		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
-		//MultithreadedServer.aaa();
-		//MultithreadedServer.runServer("src/hw09/data/increment", accounts);
-		MultithreadedServer.runServer("hw09/data/increment", accounts);
 	
+
+		System.out.println("Initial account status (begin)\n");
+		dumpAccounts();//dump
+		System.out.println("Initial account status (end)\n");
+	
+		MultithreadedServer.runServer("src/hw09/data/increment", accounts);
+	
+		System.out.println("Final account status (begin)\n");
+		dumpAccounts();//dump
+		System.out.println("Final account status (end)\n");
+
 		// assert correct account values
 		for (int i = A; i <= Z; i++) {
 			Character c = new Character((char) (i+'A'));
 			assertEquals("Account "+c+" differs",Z-i+1,accounts[i].getValue());
 		}		
 
+		
 	 }
+
+
+         @Test
+	 public void other_tests() throws IOException
+    {
+
+	MultithreadedServer.runServer("hw09/data/test_1", accounts);
+	MultithreadedServer.runServer("hw09/data/error_test_1", accounts);
+	MultithreadedServer.runServer("hw09/data/error_test_2", accounts);
+	MultithreadedServer.runServer("hw09/data/error_test_3", accounts);
+
+    }
 	 	  	 
 	
 }

@@ -9,11 +9,12 @@ import java.util.HashSet;
 import java.util.concurrent.*;
 import java.util.Random;
 
-import junit.framework.TestCase;
+//import junit.framework.TestCase;
 
-import org.junit.Test;
+//import org.junit.Test;
 
-public class MultithreadedServerTests extends TestCase {
+public class my_tests
+{
     private static final int A = constants.A;
     private static final int Z = constants.Z;
     private static final int numLetters = constants.numLetters;
@@ -34,24 +35,55 @@ public class MultithreadedServerTests extends TestCase {
 	 }    
      
         
-     @Test
-	 public void testIncrement() throws IOException {
+
+    public static void testIncrement() throws IOException
+    {
 	
 		// initialize accounts 
 		accounts = new Account[numLetters];
-		for (int i = A; i <= Z; i++) {
+		for (int i = A; i <= Z; i++)
+		    {
 			accounts[i] = new Account(Z-i);
-		}			 
-		
-		MultithreadedServer.runServer("src/hw09/data/increment", accounts);
-	
+
+		    }	
+		 
+		char ch = 'A';
+		int f = (int)ch;
+		System.out.println("Initial account status (begin)\n");
+		dumpAccounts();//dump
+		System.out.println("Initial account status (end)\n");
+		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+		System.out.println("f =" + f + " \n");
+		//MultithreadedServer.aaa();
+		//MultithreadedServer.runServer("src/hw09/data/increment", accounts);
+		//MultithreadedServer.runServer("hw09/data/increment", accounts);
+		MultithreadedServer.runServer("hw09/data/i", accounts);
+		System.out.println("bbbbbbbbbbbbbbbbbbbbbbbb\n");
 		// assert correct account values
+		/*
 		for (int i = A; i <= Z; i++) {
 			Character c = new Character((char) (i+'A'));
 			assertEquals("Account "+c+" differs",Z-i+1,accounts[i].getValue());
-		}		
+		}
+		*/
 
+		dumpAccounts();//dump
 	 }
+
+    public static void main(String[] args)
+    {
+
+	System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+	try
+	    {
+	testIncrement();
+
+	    }
+	catch(IOException e)
+	    {
+	    e.printStackTrace();
+	}
+    }
 	 	  	 
 	
 }

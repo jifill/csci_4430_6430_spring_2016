@@ -18,5 +18,35 @@ export CLASSPATH=/home/:/usr/java/junit/junit.jar:.
 
 cp -r ~/prog_lang/hw/hw9/* .
 
+ printf '#!/bin/sh\njava ./my_tests\n' > r1 && chmod u+x r1
+
 printf '#!/bin/sh\ncp -r ~/prog_lang/hw/hw9/* .\n' > get.sh
 
+printf '#!/bin/sh\nrm hw09.zip ;cp -r hw09 src;zip -r hw09.zip hw09 src\n'
+
+printf '#!/bin/sh\nrm hw09.zip ;cp -r hw09 src;zip -r hw09.zip hw09 src\n' > p; chmod u+x p
+
+
+cp ./hw09/test/my_tests.java  ./;rm ./hw09/test/my_tests.java  ; cp ./my_tests.java hw09/test/
+
+printf '#!/bin/sh\nrm hw09.zip ;cp ./hw09/test/my_tests.java  ./;rm ./hw09/test/my_tests.java ;cp -r hw09 src;zip -r hw09.zip hw09 src\ncp ./my_tests.java ./hw09/test/\n'
+
+printf '#!/bin/sh\nrm hw09.zip ;rm -rf ./src;rm $(find .  | grep .class);cp ./hw09/test/my_tests.java  ./;rm ./hw09/test/my_tests.java ;mkdir -p src;cp -r hw09 ./src/;zip -r hw09.zip hw09 src\ncp ./my_tests.java ./hw09/test/\n' > p; chmod u+x p
+
+ printf '#!/bin/sh\njava hw09/test/my_tests\n' > r1 && chmod u+x r1
+
+printf '#!/bin/sh\nrm hw09.zip ;rm -rf ./src;rm $(find .  | grep .class);rm ./hw09/test/my_tests.java ;mkdir -p src;cp -r hw09 ./src/;zip -r hw09.zip hw09 src\ncp ./my_tests.java ./hw09/test/\n' > p; chmod u+x p
+
+ printf '#!/bin/sh\njava my_tests\n' > r2 && chmod u+x r2
+
+
+
+
+
+
+//un edited account file
+cp starter/hw09/Account.java  ./hw09/
+
+
+//edited Account file
+cp ./Account.java ./hw09/Account.java

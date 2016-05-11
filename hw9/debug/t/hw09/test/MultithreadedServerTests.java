@@ -11,7 +11,7 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.junit.Test;
+//import org.junit.Test;
 
 public class MultithreadedServerTests extends TestCase {
     private static final int A = constants.A;
@@ -43,7 +43,10 @@ public class MultithreadedServerTests extends TestCase {
 			accounts[i] = new Account(Z-i);
 		}			 
 		
-		MultithreadedServer.runServer("src/hw09/data/increment", accounts);
+		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
+		//MultithreadedServer.aaa();
+		//MultithreadedServer.runServer("src/hw09/data/increment", accounts);
+		MultithreadedServer.runServer("hw09/data/increment", accounts);
 	
 		// assert correct account values
 		for (int i = A; i <= Z; i++) {

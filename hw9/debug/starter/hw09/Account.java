@@ -33,10 +33,8 @@ public class Account {
     public int peek() {
         delay();
         Thread self = Thread.currentThread();
-        synchronized (this) 
-	    {
-            if (writer == self || readers.contains(self)) 
-		{
+        synchronized (this) {
+            if (writer == self || readers.contains(self)) {
                 // should do all peeks before opening account
                 // (but *can* peek while another thread has open)
                 throw new TransactionUsageError();
@@ -49,17 +47,13 @@ public class Account {
     // but the parallel version will need to.
     //
     public void verify(int expectedValue)
-        throws TransactionAbortException 
-    {
+        throws TransactionAbortException {
         delay();
-        synchronized (this)
-	    {
-            if (!readers.contains(Thread.currentThread())) 
-		{
+        synchronized (this) {
+            if (!readers.contains(Thread.currentThread())) {
                 throw new TransactionUsageError();
             }
-            if (value != expectedValue)
-		{
+            if (value != expectedValue) {
                 // somebody else modified value since we used it;
                 // will have to retry
                 throw new TransactionAbortException();
@@ -81,14 +75,11 @@ public class Account {
     // (verifying), but the parallel version will need to.
     //
     public void open(boolean forWriting)
-        throws TransactionAbortException 
-    {
+        throws TransactionAbortException {
         delay();
         Thread self = Thread.currentThread();
-        synchronized (this)
-	    {
-            if (forWriting)
-		{
+        synchronized (this) {
+            if (forWriting) {
                 if (writer == self) {
                     throw new TransactionUsageError();
                 }
@@ -100,14 +91,11 @@ public class Account {
                     throw new TransactionAbortException();
                 }
                 writer = self;
-            } 
-	    else
-		{
+            } else {
                 if (readers.contains(self) || (writer == self)) {
                     throw new TransactionUsageError();
                 }
-                if (writer != null)
-		    {
+                if (writer != null) {
                     // encountered conflict with another transaction;
                     // will have to retry
                     throw new TransactionAbortException();
@@ -138,16 +126,14 @@ public class Account {
     }
 
     // print value % numLetters (indirection value) in 2 columns
-    public void printMod()
-    {
+    public void printMod() {
         int val = value % constants.numLetters;
         if (val < 10) System.out.print("0");
         System.out.print(val);
     }
     
     // return Account value
-    public int getValue()
-    {
+    public int getValue() {
         return value;
     }
 }

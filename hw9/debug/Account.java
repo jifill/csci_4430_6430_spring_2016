@@ -33,10 +33,13 @@ public class Account {
     public int peek() {
         delay();
         Thread self = Thread.currentThread();
-        synchronized (this) {
-            if (writer == self || readers.contains(self)) {
+        synchronized (this) 
+	    {
+            if (writer == self || readers.contains(self)) 
+		{
                 // should do all peeks before opening account
                 // (but *can* peek while another thread has open)
+		    System.out.println("[Account.peek()][value is: " + value + "[TransactionUsageError] Reason: attempted user of peek is either reader or writer (must use peek bfefore opening)\n"); //bmrk
                 throw new TransactionUsageError();
             }
             return value;
@@ -47,13 +50,19 @@ public class Account {
     // but the parallel version will need to.
     //
     public void verify(int expectedValue)
-        throws TransactionAbortException {
+        throws TransactionAbortException 
+    {
         delay();
-        synchronized (this) {
-            if (!readers.contains(Thread.currentThread())) {
+        synchronized (this)
+	    {
+            if (!readers.contains(Thread.currentThread())) 
+		{
+		    
+		    System.out.println("[Account.verify()][value is: " + value + "[TransactionUsageError] Reason: attempted user of verify is not reader \n"); //bmrk
                 throw new TransactionUsageError();
             }
-            if (value != expectedValue) {
+            if (value != expectedValue)
+		{
                 // somebody else modified value since we used it;
                 // will have to retry
                 throw new TransactionAbortException();
@@ -65,6 +74,7 @@ public class Account {
         delay();
         synchronized (this) {
             if (writer != Thread.currentThread()) {
+		System.out.println("[Account.update()][value is: " + value + "[TransactionUsageError] Reason: attempted user of update() is not writer() \n"); //bmrk
                 throw new TransactionUsageError();
             }
             value = newValue;
@@ -75,31 +85,45 @@ public class Account {
     // (verifying), but the parallel version will need to.
     //
     public void open(boolean forWriting)
-        throws TransactionAbortException {
+        throws TransactionAbortException 
+    {
         delay();
         Thread self = Thread.currentThread();
-        synchronized (this) {
-            if (forWriting) {
-                if (writer == self) {
+        synchronized (this)
+	    {
+            if (forWriting)
+		{
+                if (writer == self)
+		    {
+			System.out.println("[Account.open()][value is: " + value + "[TransactionUsageError] Reason: attempted user of open()  with purpose of writing is already a writer \n"); //bmrk
                     throw new TransactionUsageError();
-                }
+		    }
                 int numReaders = readers.size();
                 if (writer != null || numReaders > 1
-                        || (numReaders == 1 && !readers.contains(self))) {
+                        || (numReaders == 1 && !readers.contains(self)))
+		    {
                     // encountered conflict with another transaction;
                     // will have to retry
                     throw new TransactionAbortException();
                 }
                 writer = self;
-            } else {
-                if (readers.contains(self) || (writer == self)) {
-                    throw new TransactionUsageError();
-                }
-                if (writer != null) {
+            } 
+	    else //for reading
+		{
+                if (readers.contains(self) || (writer == self))
+		    {
+			if(readers.contains(self))
+			    System.out.println("[Account.open()][value is: " + value + "[TransactionUsageError] Reason: attempted user of open()  with purpose of reading is already a reader \n"); //bmrk
+			if(writer == self)
+			    System.out.println("[Account.open()][value is: " + value + "[TransactionUsageError] Reason: attempted user of open()  with purpose of reading is a writer (forbidden?)\n");
+			throw new TransactionUsageError();
+		    }
+                if (writer != null)
+		    {
                     // encountered conflict with another transaction;
                     // will have to retry
-                    throw new TransactionAbortException();
-                }
+			throw new TransactionAbortException();
+		    }
                 readers.add(Thread.currentThread());
             }
         }
@@ -110,6 +134,7 @@ public class Account {
         Thread self = Thread.currentThread();
         synchronized (this) {
             if (writer != self && !readers.contains(self)) {
+		System.out.println("[Account.close()][value is: " + value + "[TransactionUsageError] Reason: attempted user of close is not reader or writer \n"); //bmrk
                 throw new TransactionUsageError();
             }
             if (writer == self) writer = null;
@@ -126,14 +151,16 @@ public class Account {
     }
 
     // print value % numLetters (indirection value) in 2 columns
-    public void printMod() {
+    public void printMod()
+    {
         int val = value % constants.numLetters;
         if (val < 10) System.out.print("0");
         System.out.print(val);
     }
     
     // return Account value
-    public int getValue() {
+    public int getValue()
+    {
         return value;
     }
 }

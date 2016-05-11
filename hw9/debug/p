@@ -1,0 +1,3 @@
+#!/bin/sh
+rm hw09.zip ;rm -rf ./src;rm $(find .  | grep .class);rm ./hw09/test/my_tests.java ;mkdir -p src;cp -r hw09 ./src/;zip -r hw09.zip hw09 src
+cp ./my_tests.java ./hw09/test/
