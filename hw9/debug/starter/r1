@@ -1,0 +1,2 @@
+#!/bin/sh
+java hw09/test/my_tests
