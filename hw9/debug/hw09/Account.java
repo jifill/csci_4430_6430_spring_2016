@@ -89,29 +89,32 @@ public class Account {
 	    {
             if (forWriting)
 		{
-                if (writer == self) {
+                if (writer == self)
+		    {
                     throw new TransactionUsageError();
-                }
+		    }
                 int numReaders = readers.size();
                 if (writer != null || numReaders > 1
-                        || (numReaders == 1 && !readers.contains(self))) {
+                        || (numReaders == 1 && !readers.contains(self)))
+		    {
                     // encountered conflict with another transaction;
                     // will have to retry
                     throw new TransactionAbortException();
                 }
                 writer = self;
             } 
-	    else
+	    else //for reading
 		{
-                if (readers.contains(self) || (writer == self)) {
-                    throw new TransactionUsageError();
-                }
+                if (readers.contains(self) || (writer == self))
+		    {
+			throw new TransactionUsageError();
+		    }
                 if (writer != null)
 		    {
                     // encountered conflict with another transaction;
                     // will have to retry
-                    throw new TransactionAbortException();
-                }
+			throw new TransactionAbortException();
+		    }
                 readers.add(Thread.currentThread());
             }
         }

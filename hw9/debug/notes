@@ -1,0 +1,22 @@
+
+Starter code:
+
+http://www.cs.rpi.edu/~milanova/csci4430/hw09.zip
+
+shenanigans 
+
+
+java hw09.MultithreadedServer
+
+
+
+
+the runServer function of the MultithreadedServer class 
+
+export CLASSPATH=/home/:/usr/java/junit/junit.jar:.
+
+
+cp -r ~/prog_lang/hw/hw9/* .
+
+printf '#!/bin/sh\ncp -r ~/prog_lang/hw/hw9/* .\n' > get.sh
+

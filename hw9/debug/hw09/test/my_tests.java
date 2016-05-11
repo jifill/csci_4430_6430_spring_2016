@@ -36,18 +36,22 @@ public class my_tests
      
         
 
-	 public static void testIncrement() throws IOException
- {
+    public static void testIncrement() throws IOException
+    {
 	
 		// initialize accounts 
 		accounts = new Account[numLetters];
-		for (int i = A; i <= Z; i++) {
+		for (int i = A; i <= Z; i++)
+		    {
 			accounts[i] = new Account(Z-i);
 
-		}	
+		    }	
 		 
 		char ch = 'A';
 		int f = (int)ch;
+		System.out.println("Initial account status (begin)\n");
+		dumpAccounts();//dump
+		System.out.println("Initial account status (end)\n");
 		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 		System.out.println("f =" + f + " \n");
 		//MultithreadedServer.aaa();
@@ -63,6 +67,7 @@ public class my_tests
 		}
 		*/
 
+		dumpAccounts();//dump
 	 }
 
     public static void main(String[] args)
