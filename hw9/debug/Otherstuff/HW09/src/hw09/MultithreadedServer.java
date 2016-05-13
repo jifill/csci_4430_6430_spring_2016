@@ -3,8 +3,6 @@ package hw09;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -18,10 +16,12 @@ class Task implements Runnable{
     private static final int Z = constants.Z;
     private static final int numLetters = constants.numLetters;
 
-    private Account[] accounts; /**shared mutable state **/
+    private Account[] accounts; /**Shared Mutable Memory**/
     private Account[] cache = new Account[26]; //Acts as the local memory for threads to do computation on
     private Account[] veracity = new Account[26]; //Holds the original accounts state for verifying purposes
-    private String[] blockRequest = new String[26]; //Keeps track of blocks that will need to be requested
+    //private String[] blockRequest = new String[26]; //Keeps track of blocks that will need to be requested
+    private int[] readBlocks = new int[26]; //Keeps track of the read blocks
+    private int[] writeBlocks = new int[26]; //Keeps track of the write blocks
     private String transaction;
 
     // TO DO: The sequential version of Task peeks at accounts
@@ -39,6 +39,10 @@ class Task implements Runnable{
         for(int i = 0; i < accounts.length; i++){ //Copies the accounts into the threads local memory for computation and verification
         	cache[i] = new Account(accounts[i].getValue());
         	veracity[i] = new Account(accounts[i].getValue());
+        }
+        for(int i = 0; i < 26; i++){
+        	readBlocks[i] = 0;
+        	writeBlocks[i] = 0;
         }
     }
     
@@ -78,12 +82,12 @@ class Task implements Runnable{
         int accountNum = (int) (name.charAt(0)) - (int) 'A';
         if (accountNum < A || accountNum > Z)
             throw new InvalidTransactionError();
-        Account a = accounts[accountNum];
+        Account a = veracity[accountNum];
         for (int i = 1; i < name.length(); i++) {
             if (name.charAt(i) != '*')
                 throw new InvalidTransactionError();
-            accountNum = (accounts[accountNum].peek() % numLetters);
-            a = accounts[accountNum];
+            accountNum = (veracity[accountNum].peek() % numLetters);
+            a = veracity[accountNum];
         }
         return a;
     }
@@ -101,36 +105,42 @@ class Task implements Runnable{
     public void run() {
         // tokenize transaction
         String[] commands = transaction.split(";");
-        int blocks = 0; //Keeps track of current block slot being kept track of
 
         for (int i = 0; i < commands.length; i++) {
             String[] words = commands[i].trim().split("\\s");
             if (words.length < 3)
                 throw new InvalidTransactionError();
             Account lhs = parseAccount(words[0]);
-            blockRequest[blocks] = words[0]+"W"; //Collects the write block for later
-            blocks++; //Keeps track of how many blocks being used.
+            
+            int accNum = (int) (words[0].charAt(0)) - (int) 'A';//************************
+            writeBlocks[accNum] = 1;
+            
             if (!words[1].equals("="))
                 throw new InvalidTransactionError();
             int rhs = parseAccountOrNum(words[2]);
-            if(!(words[2].charAt(0) >= '0' && words[2].charAt(0) <= '9')){ //Collects the read block for later
-            	blockRequest[blocks] = words[2]+"R";
-            	blocks++;
-        	}
+            
+            if(!(words[2].charAt(0) >= '0' && words[2].charAt(0) <= '9')){//************************
+            	accNum = (int) (words[2].charAt(0)) - (int) 'A';
+            	readBlocks[accNum] = 1;
+            }
+            
+            
             for (int j = 3; j < words.length; j+=2) {
                 if (words[j].equals("+")){
                     rhs += parseAccountOrNum(words[j+1]);
-                    if(!(words[j+1].charAt(0) >= '0' && words[j+1].charAt(0) <= '9')){ //Collects the read block for later
-                    	blockRequest[blocks] = words[j+1]+"R";
-                    	blocks++;
-                	}
-            	}
+                    
+                    if(!(words[j+1].charAt(0) >= '0' && words[j+1].charAt(0) <= '9')){//************************
+                    	accNum = (int) (words[j+1].charAt(0)) - (int) 'A';
+                    	readBlocks[accNum] = 1;
+                    }
+                }
                 else if (words[j].equals("-")){
                     rhs -= parseAccountOrNum(words[j+1]);
-                    if(!(words[j+1].charAt(0) >= '0' && words[j+1].charAt(0) <= '9')){//Collects the read block for later
-                    	blockRequest[blocks] = words[j+1]+"R";
-                    	blocks++;
-                	}
+                    
+                    if(!(words[j+1].charAt(0) >= '0' && words[j+1].charAt(0) <= '9')){//************************
+                    	accNum = (int) (words[j+1].charAt(0)) - (int) 'A';
+                    	readBlocks[accNum] = 1;
+                    }
                 }
                 else
                     throw new InvalidTransactionError();
@@ -145,176 +155,109 @@ class Task implements Runnable{
         }
         System.out.println("commit: " + transaction);
         
-        
-        
-        for(int i = 0; i < blockRequest.length; i++){ //Delete duplicate block request
-        	for(int j = i+1; j < blockRequest.length; j++){
-        		boolean once = true;
-        		if(blockRequest[i] != null && blockRequest[j] != null && (blockRequest[i].charAt(0) == blockRequest[j].charAt(0)) && blockRequest[i].charAt(1) == 'W' && blockRequest[j].charAt(1) == 'R' && once){
-        			String temp = blockRequest[j];
-        			blockRequest[j] = blockRequest[i];
-        			blockRequest[i] = temp;
-        			once = false;
-        		}
-        		if(blockRequest[i] != null && blockRequest[j] != null && (blockRequest[i].charAt(0) == blockRequest[j].charAt(0)) && blockRequest[j].charAt(1) == 'R'){
-        			blockRequest[j] = null;
-        		}
-        		if(blockRequest[i] != null && blockRequest[j] != null && blockRequest[i].compareTo(blockRequest[j]) == 0 && blockRequest[i].charAt(1) == 'W'){
-        			blockRequest[j] = null;
-        		}
-        	}
-        }
-        
-        for(int i = 0; i < blockRequest.length; i++){ //Request all blocks
-        	if(blockRequest[i] != null){
-
-	        	//Arrays.sort(blockRequest);
-	        	Account acc = parseGlobalAccount(blockRequest[i].substring(0, 1));
-	        	if(blockRequest[i].charAt(1) == 'W'){
-	        		try {
-	                    acc.open(true);
-	                    System.out.println(blockRequest[i]);
-	                } catch (TransactionAbortException e) {
-	                	for(int i1 = 0; i1 < accounts.length; i1++){ //Copies the accounts into the threads local memory for computation and verification
-	                    	cache[i1] = new Account(accounts[i1].getValue());
-	                    	veracity[i1] = new Account(accounts[i1].getValue());
-	                    }
-	                	for(int i1 = 0; i1 < blockRequest.length; i1++){ //Closes global accounts and frees blocks
-	                    	for(int j = i1+1; j < blockRequest.length; j++){
-	                    		if(blockRequest[i1] != null && blockRequest[j] != null){
-	                    			
-	                    			if(blockRequest[i1].charAt(0) == blockRequest[j].charAt(0)){
-	                    				
-	                    				blockRequest[j] = null;
-	                    				
-	                    			}
-	                    		
-	                    		}
-	                    		
-	                    	}
-	                    	if(blockRequest[i1] != null){
-	            	        	//Account acc1 = parseGlobalAccount(blockRequest[i1].substring(0, 1));
-	            				//acc1.close();
-	            	        	blockRequest[i1] = null;
-	                    	}
-	                    	
-	                    }
-	                    run();
-	                }
-	        	}else{
-	        		try {
-	                    acc.open(false);
-	                } catch (TransactionAbortException e) {
-	                	for(int i1 = 0; i1 < accounts.length; i1++){ //Copies the accounts into the threads local memory for computation and verification
-	                    	cache[i1] = new Account(accounts[i1].getValue());
-	                    	veracity[i1] = new Account(accounts[i1].getValue());
-	                    }
-	                	for(int i1 = 0; i1 < blockRequest.length; i1++){ //Closes global accounts and frees blocks
-	                    	for(int j = i1+1; j < blockRequest.length; j++){
-	                    		if(blockRequest[i1] != null && blockRequest[j] != null){
-	                    			
-	                    			if(blockRequest[i1].charAt(0) == blockRequest[j].charAt(0)){
-	                    				
-	                    				blockRequest[j] = null;
-	                    				
-	                    			}
-	                    		
-	                    		}
-	                    		
-	                    	}
-	                    	if(blockRequest[i1] != null){
-	            	        	//Account acc1 = parseGlobalAccount(blockRequest[i1].substring(0, 1));
-	            				//acc1.close();
-	            	        	blockRequest[i1] = null;
-	                    	}
-	                    	
-	                    }
-	                    run();
-	                }
-	        	}
-        	
-        	}
-        	
-        }
-        
-        for(int i = 0; i < blockRequest.length; i++){ //Verify that accounts have not been changed
-        	if(blockRequest[i] != null){
-	        	
-	        	Account acc = parseGlobalAccount(blockRequest[i].substring(0, 1));
-	        	
-	        	Account veri = parseVerifyAccount(blockRequest[i].substring(0, 1));
-	        	try {
-					acc.verify(veri.getValue());
+        String lockState = "";
+        for(int i = 0; i < readBlocks.length; i++){//request read blocks
+        	lockState = lockState + readBlocks[i] + " ";
+        	if(readBlocks[i] == 1){
+        		Account acc = parseGlobalAccount("" + (char)(i + 'A'));
+        		try {
+					acc.open(false);
 				} catch (TransactionAbortException e) {
+					for(int i1 = 0; i1 < readBlocks.length; i1++){//request block close
+			        	lockState = lockState + (readBlocks[i1] + writeBlocks[i1]) + " ";
+			        	if(readBlocks[i1] == 1 || writeBlocks[i1] == 1){
+			        		Account acc1 = parseGlobalAccount("" + (char)(i1 + 'A'));
+			        		acc1.close();
+			        		readBlocks[i1] = 0;
+			        		writeBlocks[i1] = 0;
+			        	}
+			        }
 					// TODO Auto-generated catch block
-					for(int i1 = 0; i1 < accounts.length; i1++){ //Copies the accounts into the threads local memory for computation and verification
-			        	cache[i1] = new Account(accounts[i1].getValue());
-			        	veracity[i1] = new Account(accounts[i1].getValue());
-			        }
-					for(int i1 = 0; i1 < blockRequest.length; i1++){ //Closes global accounts and frees blocks
-			        	for(int j = i1+1; j < blockRequest.length; j++){
-			        		if(blockRequest[i1] != null && blockRequest[j] != null){
-			        			
-			        			if(blockRequest[i1].charAt(0) == blockRequest[j].charAt(0)){
-			        				
-			        				blockRequest[j] = null;
-			        				
-			        			}
-			        		
-			        		}
-			        		
-			        	}
-			        	if(blockRequest[i1] != null){
-				        	Account acc1 = parseGlobalAccount(blockRequest[i1].substring(0, 1));
-							acc1.close();
-				        	blockRequest[i1] = null;
-			        	}
-			        	
-			        }
 					run();
 				}
         	}
-        	
         }
+        //System.out.print("\nRead " + lockState);
         
-        for(int i = 0; i < blockRequest.length; i++){ //Push changes to global Accounts
-        	if(blockRequest[i] != null){
-        		
-        		if(blockRequest[i].charAt(1) == 'W'){
-        			
-        			Account acc = parseGlobalAccount(blockRequest[i].substring(0, 1));
-        			Account cacheAcc = parseAccount(blockRequest[i].substring(0, 1));;
-        			acc.update(cacheAcc.getValue());
-        			
-        		}
-        		
-        	}
-        	
-        }
         
-        for(int i = 0; i < blockRequest.length; i++){ //Closes global accounts and frees blocks
-        	for(int j = i+1; j < blockRequest.length; j++){
-        		if(blockRequest[i] != null && blockRequest[j] != null){
-        			
-        			if(blockRequest[i].charAt(0) == blockRequest[j].charAt(0)){
-        				
-        				blockRequest[j] = null;
-        				
-        			}
-        		
-        		}
-        		
+        lockState="";
+        for(int i = 0; i < writeBlocks.length; i++){//request write blocks
+        	lockState = lockState + writeBlocks[i] + " ";
+        	if(writeBlocks[i] == 1){
+        		Account acc = parseGlobalAccount("" + (char)(i + 'A'));
+        		try {
+					acc.open(true);
+				} catch (TransactionAbortException e) {
+					for(int i1 = 0; i1 < readBlocks.length; i1++){//request block close
+			        	lockState = lockState + (readBlocks[i1] + writeBlocks[i1]) + " ";
+			        	if(readBlocks[i1] == 1 || writeBlocks[i1] == 1){
+			        		Account acc1 = parseGlobalAccount("" + (char)(i1 + 'A'));
+			        		acc1.close();
+			        		readBlocks[i1] = 0;
+			        		writeBlocks[i1] = 0;
+			        	}
+			        }
+					// TODO Auto-generated catch block
+					run();
+				}
         	}
-        	if(blockRequest[i] != null){
-	        	Account acc = parseGlobalAccount(blockRequest[i].substring(0, 1));
-				acc.close();
-	        	blockRequest[i] = null;
-        	}
-        	
         }
+        //System.out.print("\nWrite " + lockState);
+        
+        
+        lockState = "";
+        for(int i = 0; i < readBlocks.length; i++){//verify main account
+        	lockState = lockState + readBlocks[i] + " ";
+        	if(readBlocks[i] == 1){
+        		Account acc = parseGlobalAccount("" + (char)(i + 'A'));
+        		Account ver = parseVerifyAccount("" + (char)(i + 'A'));
+        		try {
+					acc.verify(ver.getValue());
+				} catch (TransactionAbortException e) {
+					for(int i1 = 0; i1 < readBlocks.length; i1++){//request block close
+			        	lockState = lockState + (readBlocks[i1] + writeBlocks[i1]) + " ";
+			        	if(readBlocks[i1] == 1 || writeBlocks[i1] == 1){
+			        		Account acc1 = parseGlobalAccount("" + (char)(i1 + 'A'));
+			        		acc1.close();
+			        		readBlocks[i1] = 0;
+			        		writeBlocks[i1] = 0;
+			        	}
+			        }
+					// TODO Auto-generated catch block
+					run();
+				}
+        	}
+        }
+        //System.out.print("\nVerified " + lockState);
+        
+        
+        lockState = "";
+        for(int i = 0; i < writeBlocks.length; i++){//verify main account
+        	lockState = lockState + writeBlocks[i] + " ";
+        	if(writeBlocks[i] == 1){
+        		Account acc = parseGlobalAccount("" + (char)(i + 'A'));
+        		Account cac = parseAccount("" + (char)(i + 'A'));
+        		
+				acc.update(cac.getValue());
+				
+        	}
+        }
+        //System.out.print("\nUpdated " + lockState);
+        
+        
+        lockState = "";
+        for(int i = 0; i < readBlocks.length; i++){//request block close
+        	lockState = lockState + (readBlocks[i] + writeBlocks[i]) + " ";
+        	if(readBlocks[i] == 1 || writeBlocks[i] == 1){
+        		Account acc = parseGlobalAccount("" + (char)(i + 'A'));
+        		acc.close();
+        		readBlocks[i] = 0;
+        		writeBlocks[i] = 0;
+        	}
+        }
+        //System.out.print("\nClose " + lockState);
         
     }
-    
 }
 
 public class MultithreadedServer {
@@ -340,12 +283,11 @@ public class MultithreadedServer {
             Task t = new Task(accounts, line);
             //t.run();
             e.execute(t);
-            
         }
         
         input.close();
         try {
-			e.awaitTermination();
+			e.awaitTermination(5, TimeUnit.SECONDS);
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
